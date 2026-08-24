@@ -15,6 +15,7 @@ describe('PIXEL BALL 화면', () => {
   it('매치 프리뷰와 세 가지 난이도를 보여준다', () => {
     render(<App />)
     expect(screen.getByRole('heading', { name: /THREE INNINGS/ })).toBeInTheDocument()
+    expect(screen.getByText('휴대폰을 가로로 돌려주세요')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /루키/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /프로/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /올스타/ })).toBeInTheDocument()

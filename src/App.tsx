@@ -41,6 +41,16 @@ const PITCH_LABELS: Record<PitchType, { key: string; ko: string; en: string }> =
 
 const OUTCOME_SOUND_HITS: PlayOutcome[] = ['single', 'double', 'triple', 'homeRun', 'foul']
 
+function RotateDeviceNotice() {
+  return (
+    <div className="rotate-device" role="status">
+      <span aria-hidden="true">↻</span>
+      <strong>휴대폰을 가로로 돌려주세요</strong>
+      <p>PIXEL BALL 3는 가로 화면에 최적화되어 있습니다.</p>
+    </div>
+  )
+}
+
 function PixelPlayer({ team }: { team: 'stars' | 'blazers' }) {
   return (
     <div className={`pixel-player pixel-player--${team}`} aria-hidden="true">
@@ -107,6 +117,7 @@ function MenuScreen({
 }) {
   return (
     <main className="menu-screen">
+      <RotateDeviceNotice />
       <header className="menu-header">
         <a className="wordmark" href="#top" aria-label="PIXEL BALL 3 홈">
           <span className="wordmark__ball">PB</span>
@@ -367,6 +378,7 @@ function GameScreen({
 
   return (
     <main className="game-screen">
+      <RotateDeviceNotice />
       <Scoreboard state={state} />
       <section className="game-stage" aria-label="경기 플레이 영역">
         <GameCanvas state={state} activePitch={activePitch} batAim={batAim} pitchTarget={pitchTarget} hitEffect={hitEffect} />
