@@ -722,7 +722,7 @@ kbd {
   left: 50%;
   width: 148px;
   height: 240px;
-  filter: drop-shadow(8px 10px 0 rgba(8, 20, 46, .22));
+  filter: drop-shadow(7px 9px 0 rgba(8, 20, 46, .2));
   transform: translateX(-50%);
 }
 
@@ -733,124 +733,246 @@ kbd {
 }
 
 .pixel-player__shadow {
-  bottom: 2px;
-  left: 15px;
-  width: 120px;
-  height: 17px;
-  border-radius: 50%;
-  background: rgba(8, 20, 46, .28);
+  bottom: 4px;
+  left: 12px;
+  width: 124px;
+  height: 14px;
+  background: rgba(8, 20, 46, .22);
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, calc(100% - 8px) 4px, 100% 4px, 100% 10px, calc(100% - 12px) 10px, calc(100% - 12px) 14px, 12px 14px, 12px 10px, 0 10px, 0 4px, 8px 4px);
 }
 
 .pixel-player__leg {
-  z-index: 2;
-  bottom: 13px;
-  width: 34px;
-  height: 72px;
-  border-bottom: 15px solid var(--navy);
+  z-index: 3;
+  bottom: 28px;
+  width: 29px;
+  height: 52px;
+  border: 7px solid var(--navy);
+  border-top: 0;
   background: var(--cream);
-  box-shadow: inset 0 -23px 0 #d6e3e4;
+  box-shadow: inset 0 -15px 0 #d5e2df;
 }
 
-.pixel-player__leg--left { left: 36px; transform: rotate(4deg); }
-.pixel-player__leg--right { right: 35px; transform: rotate(-4deg); }
+.pixel-player__leg--left { left: 36px; }
+.pixel-player__leg--right { right: 35px; }
+
+.pixel-player__shoe {
+  z-index: 5;
+  bottom: 12px;
+  width: 43px;
+  height: 22px;
+  border: 7px solid var(--navy);
+  background: var(--cream);
+  box-shadow: inset 0 -6px 0 #c8d8d9;
+}
+
+.pixel-player__shoe::after {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  height: 4px;
+  background: var(--blue);
+  content: "";
+}
+
+.pixel-player--blazers .pixel-player__shoe::after {
+  background: var(--coral);
+}
+
+.pixel-player__shoe--left {
+  left: 25px;
+  clip-path: polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px, 7px 7px);
+}
+
+.pixel-player__shoe--right {
+  right: 24px;
+  clip-path: polygon(0 0, calc(100% - 7px) 0, calc(100% - 7px) 7px, 100% 7px, 100% 100%, 0 100%);
+}
 
 .pixel-player__body {
-  z-index: 4;
-  bottom: 75px;
-  left: 28px;
-  width: 92px;
-  height: 78px;
-  border: 8px solid var(--navy);
-  border-radius: 12px 12px 22px 22px;
+  z-index: 6;
+  bottom: 73px;
+  left: 26px;
+  width: 96px;
+  height: 72px;
+  border: 7px solid var(--navy);
   background: var(--blue);
-  box-shadow: inset 0 -16px 0 #153c9d;
+  box-shadow: inset 0 -13px 0 #153c9d, inset 9px 0 0 rgba(255, 255, 255, .16);
+  clip-path: polygon(7px 0, calc(100% - 7px) 0, calc(100% - 7px) 5px, 100% 5px, 100% calc(100% - 7px), calc(100% - 7px) calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 7px calc(100% - 7px), 0 calc(100% - 7px), 0 5px, 7px 5px);
 }
 
-.pixel-player--blazers .pixel-player__body { background: var(--coral); box-shadow: inset 0 -16px 0 var(--coral-dark); }
+.pixel-player--blazers .pixel-player__body {
+  background: var(--coral);
+  box-shadow: inset 0 -13px 0 var(--coral-dark), inset 9px 0 0 rgba(255, 255, 255, .14);
+}
+
+.pixel-player__belt {
+  z-index: 9;
+  bottom: 72px;
+  left: 32px;
+  width: 84px;
+  height: 10px;
+  border-top: 5px solid var(--navy);
+  background: var(--yellow);
+}
+
+.pixel-player__jersey-mark {
+  z-index: 10;
+  bottom: 105px;
+  left: 65px;
+  width: 18px;
+  height: 20px;
+  border: 5px solid var(--cream);
+  border-top: 0;
+  border-bottom: 0;
+  box-shadow: 0 4px 0 var(--cream);
+}
 
 .pixel-player__arm {
-  z-index: 3;
-  bottom: 85px;
-  width: 30px;
-  height: 74px;
+  z-index: 5;
+  bottom: 84px;
+  width: 31px;
+  height: 59px;
   border: 7px solid var(--navy);
   background: #f2ad79;
+  box-shadow: inset 0 -8px 0 #d98258;
 }
 
-.pixel-player__arm--left { left: 12px; transform: rotate(9deg); }
-.pixel-player__arm--right { right: 11px; transform: rotate(-9deg); }
+.pixel-player__arm--left {
+  left: 8px;
+  transform: rotate(7deg);
+  transform-origin: right top;
+}
+
+.pixel-player__arm--right {
+  right: 7px;
+  transform: rotate(-7deg);
+  transform-origin: left top;
+}
+
+.pixel-player__glove {
+  z-index: 11;
+  right: 1px;
+  bottom: 82px;
+  width: 35px;
+  height: 31px;
+  border: 7px solid var(--navy);
+  background: #8d5b36;
+  box-shadow: inset 7px -6px 0 #604027;
+  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px, 7px 7px);
+}
+
+.pixel-player--blazers .pixel-player__glove {
+  right: auto;
+  left: 0;
+}
 
 .pixel-player__head {
-  z-index: 5;
-  top: 25px;
-  left: 25px;
-  width: 100px;
-  height: 100px;
-  border: 8px solid var(--navy);
-  border-radius: 42% 42% 46% 46%;
+  z-index: 8;
+  top: 40px;
+  left: 28px;
+  width: 92px;
+  height: 87px;
+  border: 7px solid var(--navy);
   background: #f2ad79;
-  box-shadow: inset 0 -12px 0 #d9895d;
+  box-shadow: inset 8px 0 0 #ffc292, inset 0 -9px 0 #d9895d;
+  clip-path: polygon(7px 0, calc(100% - 7px) 0, calc(100% - 7px) 7px, 100% 7px, 100% calc(100% - 12px), calc(100% - 7px) calc(100% - 12px), calc(100% - 7px) 100%, 7px 100%, 7px calc(100% - 7px), 0 calc(100% - 7px), 0 7px, 7px 7px);
 }
 
 .pixel-player__hair {
-  z-index: 6;
-  top: 36px;
-  left: 31px;
-  width: 88px;
-  height: 29px;
+  z-index: 9;
+  top: 46px;
+  left: 34px;
+  width: 80px;
+  height: 31px;
   background: var(--navy);
-  clip-path: polygon(0 0, 100% 0, 100% 58%, 88% 58%, 88% 100%, 75% 100%, 75% 62%, 61% 62%, 61% 100%, 48% 100%, 48% 64%, 34% 64%, 34% 100%, 20% 100%, 20% 64%, 0 64%);
+  clip-path: polygon(0 0, 100% 0, 100% 55%, 92% 55%, 92% 100%, 78% 100%, 78% 58%, 63% 58%, 63% 82%, 49% 82%, 49% 58%, 34% 58%, 34% 90%, 18% 90%, 18% 58%, 0 58%);
 }
 
 .pixel-player__cap {
-  z-index: 8;
-  top: 12px;
-  left: 20px;
-  width: 109px;
-  height: 38px;
-  border: 8px solid var(--navy);
-  border-radius: 50% 50% 0 0;
+  z-index: 12;
+  top: 17px;
+  left: 21px;
+  width: 107px;
+  height: 39px;
+  border: 7px solid var(--navy);
   background: var(--blue);
+  box-shadow: inset 9px 0 0 var(--blue-light);
+  clip-path: polygon(14px 0, calc(100% - 21px) 0, calc(100% - 21px) 5px, calc(100% - 7px) 5px, calc(100% - 7px) 12px, 100% 12px, 100% 100%, 0 100%, 0 12px, 7px 12px, 7px 5px, 14px 5px);
 }
 
-.pixel-player--blazers .pixel-player__cap { background: var(--coral); }
+.pixel-player--blazers .pixel-player__cap {
+  background: var(--coral);
+  box-shadow: inset 9px 0 0 #ff7b69;
+}
 
 .pixel-player__cap-bill {
-  z-index: 9;
-  top: 43px;
-  right: 5px;
-  width: 65px;
-  height: 13px;
-  border: 5px solid var(--navy);
+  z-index: 13;
+  top: 49px;
+  right: 4px;
+  width: 63px;
+  height: 15px;
+  border: 6px solid var(--navy);
   background: var(--blue);
+  box-shadow: inset 0 4px 0 var(--blue-light);
 }
 
-.pixel-player--blazers .pixel-player__cap-bill { right: auto; left: 4px; background: var(--coral); }
+.pixel-player--blazers .pixel-player__cap-bill {
+  right: auto;
+  left: 3px;
+  background: var(--coral);
+  box-shadow: inset 0 4px 0 #ff7b69;
+}
 
 .pixel-player__eye {
-  z-index: 10;
-  top: 78px;
-  width: 12px;
-  height: 16px;
+  z-index: 14;
+  top: 82px;
+  width: 10px;
+  height: 13px;
   background: var(--navy);
-  box-shadow: inset 4px 3px 0 var(--cream);
+  box-shadow: inset 4px 2px 0 var(--cream);
 }
 
 .pixel-player__eye--left { left: 48px; }
-.pixel-player__eye--right { right: 46px; }
+.pixel-player__eye--right { right: 47px; }
 
-.pixel-player__bat {
-  z-index: 1;
-  top: 35px;
-  left: 5px;
-  width: 16px;
-  height: 150px;
-  border: 5px solid var(--navy);
-  background: #d99852;
-  transform: rotate(-22deg);
+.pixel-player__nose {
+  z-index: 14;
+  top: 96px;
+  left: 70px;
+  width: 8px;
+  height: 7px;
+  background: #d98258;
 }
 
-.pixel-player--blazers .pixel-player__bat { right: 4px; left: auto; transform: rotate(22deg); }
+.pixel-player__mouth {
+  z-index: 14;
+  top: 108px;
+  left: 66px;
+  width: 18px;
+  height: 7px;
+  background: var(--navy);
+  box-shadow: inset 5px 0 0 var(--coral);
+}
+
+.pixel-player__bat {
+  z-index: 2;
+  top: 42px;
+  left: 0;
+  width: 18px;
+  height: 143px;
+  border: 6px solid var(--navy);
+  background: #d99852;
+  box-shadow: inset 5px 0 0 #f0bd69;
+  transform: rotate(-18deg);
+  transform-origin: center bottom;
+}
+
+.pixel-player--blazers .pixel-player__bat {
+  right: 0;
+  left: auto;
+  transform: rotate(18deg);
+}
 
 .menu-footer {
   position: relative;

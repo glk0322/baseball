@@ -63,18 +63,25 @@ function PixelPlayer({ team }: { team: 'stars' | 'blazers' }) {
   return (
     <div className={`pixel-player pixel-player--${team}`} aria-hidden="true">
       <span className="pixel-player__shadow" />
+      <span className="pixel-player__bat" />
       <span className="pixel-player__leg pixel-player__leg--left" />
       <span className="pixel-player__leg pixel-player__leg--right" />
+      <span className="pixel-player__shoe pixel-player__shoe--left" />
+      <span className="pixel-player__shoe pixel-player__shoe--right" />
       <span className="pixel-player__body" />
+      <span className="pixel-player__belt" />
+      <span className="pixel-player__jersey-mark" />
       <span className="pixel-player__arm pixel-player__arm--left" />
       <span className="pixel-player__arm pixel-player__arm--right" />
+      <span className="pixel-player__glove" />
       <span className="pixel-player__head" />
       <span className="pixel-player__hair" />
       <span className="pixel-player__cap" />
       <span className="pixel-player__cap-bill" />
       <span className="pixel-player__eye pixel-player__eye--left" />
       <span className="pixel-player__eye pixel-player__eye--right" />
-      <span className="pixel-player__bat" />
+      <span className="pixel-player__nose" />
+      <span className="pixel-player__mouth" />
     </div>
   )
 }

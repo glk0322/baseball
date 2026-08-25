@@ -122,47 +122,132 @@ function drawStadium(context: CanvasRenderingContext2D, time: number) {
 function drawPitcher(
   context: CanvasRenderingContext2D,
   x: number,
-  y: number,
+  groundY: number,
   colors: { cap: string; jersey: string },
   scale: number,
   time: number,
 ) {
-  const bob = Math.floor(Math.sin(time / 190) * scale)
-  rect(context, '#18213d', x - 5 * scale, y + 12 * scale, 4 * scale, 6 * scale)
-  rect(context, '#18213d', x + scale, y + 12 * scale, 4 * scale, 6 * scale)
-  rect(context, COLORS.cream, x - 5 * scale, y + 4 * scale + bob, 10 * scale, 9 * scale)
-  rect(context, colors.jersey, x - 5 * scale, y + 7 * scale + bob, 10 * scale, 6 * scale)
-  rect(context, '#f2b07d', x - 4 * scale, y + bob, 8 * scale, 6 * scale)
-  rect(context, colors.cap, x - 5 * scale, y - scale + bob, 10 * scale, 3 * scale)
-  rect(context, colors.cap, x + 2 * scale, y + 2 * scale + bob, 5 * scale, scale)
-  rect(context, COLORS.ink, x + 2 * scale, y + 2 * scale + bob, scale, scale)
-  rect(context, colors.jersey, x - 8 * scale, y + 6 * scale + bob, 4 * scale, 3 * scale)
-  rect(context, '#8d5b36', x - 9 * scale, y + 6 * scale + bob, 3 * scale, 4 * scale)
+  const bob = Math.round(Math.sin(time / 220)) * scale
+  drawPixelPlayer(context, x, groundY + bob, colors, scale, 'pitcher', false, time)
 }
 
 function drawBatter(
   context: CanvasRenderingContext2D,
   x: number,
-  y: number,
+  groundY: number,
   colors: { cap: string; jersey: string },
   scale: number,
   time: number,
   flipped = false,
 ) {
-  const swing = Math.sin(time / 90) > 0.93 ? 1 : 0
+  drawPixelPlayer(context, x, groundY, colors, scale, 'batter', flipped, time)
+}
+
+type PixelPlayerRole = 'pitcher' | 'batter'
+
+function drawPixelBat(
+  context: CanvasRenderingContext2D,
+  x: number,
+  groundY: number,
+  scale: number,
+  direction: number,
+  time: number,
+) {
+  const swingFrame = Math.sin(time / 110) > 0.94 ? 2 : 0
+  for (let step = 0; step < 9; step += 1) {
+    const batX = x - direction * (10 + step * 1.35 + swingFrame) * scale
+    const batY = groundY - (20 + step * 2.15 + swingFrame) * scale
+    rect(context, COLORS.ink, batX, batY, 4 * scale, 4 * scale)
+    rect(context, step > 6 ? '#f0bd69' : '#d99852', batX + scale, batY + scale, 2 * scale, 2 * scale)
+  }
+}
+
+function drawPixelPlayer(
+  context: CanvasRenderingContext2D,
+  x: number,
+  groundY: number,
+  colors: { cap: string; jersey: string },
+  scale: number,
+  role: PixelPlayerRole,
+  flipped: boolean,
+  time: number,
+) {
   const direction = flipped ? -1 : 1
-  rect(context, 'rgba(8,20,46,.22)', x - 10 * scale, y + 23 * scale, 24 * scale, 4 * scale)
-  rect(context, COLORS.cream, x - 6 * scale, y + 13 * scale, 5 * scale, 10 * scale)
-  rect(context, COLORS.cream, x + 2 * scale, y + 13 * scale, 5 * scale, 10 * scale)
-  rect(context, COLORS.ink, x - 7 * scale, y + 21 * scale, 7 * scale, 4 * scale)
-  rect(context, COLORS.ink, x + scale, y + 21 * scale, 7 * scale, 4 * scale)
-  rect(context, colors.jersey, x - 8 * scale, y + 4 * scale, 16 * scale, 12 * scale)
-  rect(context, '#f2b07d', x - 6 * scale, y - 5 * scale, 12 * scale, 10 * scale)
-  rect(context, colors.cap, x - 8 * scale, y - 8 * scale, 16 * scale, 5 * scale)
-  rect(context, colors.cap, x + direction * 5 * scale, y - 4 * scale, direction * 6 * scale, 2 * scale)
-  rect(context, COLORS.ink, x + direction * 2 * scale, y - 2 * scale, 2 * scale, 2 * scale)
-  rect(context, '#8d5b36', x - direction * (11 + swing * 5) * scale, y - (8 + swing * 4) * scale, 3 * scale, 19 * scale)
-  rect(context, '#d99852', x - direction * (10 + swing * 5) * scale, y - (9 + swing * 4) * scale, scale, 18 * scale)
+  const skin = '#f2ad79'
+  const skinLight = '#ffc391'
+  const skinShade = '#d98258'
+  const uniformShade = colors.jersey === COLORS.coral ? COLORS.coralDark : '#153c9d'
+  const uniformLight = colors.jersey === COLORS.coral ? '#ff7b69' : COLORS.blueLight
+  const stride = role === 'pitcher' && Math.sin(time / 260) > 0.72 ? scale : 0
+
+  rect(context, 'rgba(8,20,46,.24)', x - 13 * scale, groundY - 2 * scale, 27 * scale, 4 * scale)
+  if (role === 'batter') drawPixelBat(context, x, groundY, scale, direction, time)
+
+  // Square shoes, striped socks and short legs.
+  rect(context, COLORS.ink, x - 8 * scale - stride, groundY - 6 * scale, 8 * scale, 6 * scale)
+  rect(context, colors.jersey, x - 7 * scale - stride, groundY - 5 * scale, 6 * scale, 3 * scale)
+  rect(context, COLORS.cream, x - 6 * scale - stride, groundY - 2 * scale, 6 * scale, scale)
+  rect(context, COLORS.ink, x + scale + stride, groundY - 6 * scale, 8 * scale, 6 * scale)
+  rect(context, colors.jersey, x + 2 * scale + stride, groundY - 5 * scale, 6 * scale, 3 * scale)
+  rect(context, COLORS.cream, x + 2 * scale + stride, groundY - 2 * scale, 6 * scale, scale)
+
+  rect(context, COLORS.ink, x - 7 * scale - stride, groundY - 13 * scale, 6 * scale, 8 * scale)
+  rect(context, COLORS.cream, x - 5 * scale - stride, groundY - 12 * scale, 3 * scale, 6 * scale)
+  rect(context, uniformLight, x - 5 * scale - stride, groundY - 8 * scale, 3 * scale, 2 * scale)
+  rect(context, COLORS.ink, x + 2 * scale + stride, groundY - 13 * scale, 6 * scale, 8 * scale)
+  rect(context, COLORS.cream, x + 3 * scale + stride, groundY - 12 * scale, 3 * scale, 6 * scale)
+  rect(context, uniformLight, x + 3 * scale + stride, groundY - 8 * scale, 3 * scale, 2 * scale)
+
+  // Oversized block jersey with a dark outline and a two-tone hem.
+  rect(context, COLORS.ink, x - 10 * scale, groundY - 25 * scale, 20 * scale, 14 * scale)
+  rect(context, colors.jersey, x - 8 * scale, groundY - 23 * scale, 16 * scale, 10 * scale)
+  rect(context, uniformLight, x - 7 * scale, groundY - 22 * scale, 3 * scale, 7 * scale)
+  rect(context, uniformShade, x - 8 * scale, groundY - 16 * scale, 16 * scale, 3 * scale)
+  rect(context, COLORS.yellow, x - 7 * scale, groundY - 13 * scale, 14 * scale, scale)
+  rect(context, COLORS.cream, x - scale, groundY - 21 * scale, 2 * scale, 5 * scale)
+
+  // Chunky arms with one glove/hand posed toward the plate.
+  const armLift = role === 'pitcher' ? 3 * scale : 0
+  rect(context, COLORS.ink, x - 13 * scale, groundY - 23 * scale - armLift, 6 * scale, 12 * scale)
+  rect(context, colors.jersey, x - 12 * scale, groundY - 22 * scale - armLift, 4 * scale, 5 * scale)
+  rect(context, skin, x - 12 * scale, groundY - 17 * scale - armLift, 4 * scale, 5 * scale)
+  rect(context, skinLight, x - 11 * scale, groundY - 16 * scale - armLift, scale, 3 * scale)
+
+  rect(context, COLORS.ink, x + 7 * scale, groundY - 23 * scale, 6 * scale, 12 * scale)
+  rect(context, colors.jersey, x + 8 * scale, groundY - 22 * scale, 4 * scale, 5 * scale)
+  rect(context, skin, x + 8 * scale, groundY - 17 * scale, 4 * scale, 5 * scale)
+  rect(context, skinShade, x + 11 * scale, groundY - 16 * scale, scale, 3 * scale)
+
+  if (role === 'pitcher') {
+    rect(context, COLORS.ink, x - 15 * scale, groundY - 25 * scale - armLift, 6 * scale, 7 * scale)
+    rect(context, '#8d5b36', x - 14 * scale, groundY - 24 * scale - armLift, 4 * scale, 5 * scale)
+    rect(context, '#604027', x - 11 * scale, groundY - 22 * scale - armLift, scale, 3 * scale)
+  }
+
+  // Large square face, stepped hair, cap and bill.
+  rect(context, COLORS.ink, x - 10 * scale, groundY - 39 * scale, 20 * scale, 17 * scale)
+  rect(context, skin, x - 8 * scale, groundY - 37 * scale, 16 * scale, 13 * scale)
+  rect(context, skinLight, x - 7 * scale, groundY - 36 * scale, 3 * scale, 10 * scale)
+  rect(context, skinShade, x - 8 * scale, groundY - 26 * scale, 16 * scale, 2 * scale)
+  rect(context, COLORS.ink, x - 8 * scale, groundY - 38 * scale, 16 * scale, 4 * scale)
+  rect(context, COLORS.ink, x - 8 * scale, groundY - 35 * scale, 3 * scale, 5 * scale)
+  rect(context, COLORS.ink, x + 6 * scale, groundY - 35 * scale, 2 * scale, 4 * scale)
+
+  rect(context, COLORS.ink, x - 11 * scale, groundY - 44 * scale, 21 * scale, 8 * scale)
+  rect(context, colors.cap, x - 9 * scale, groundY - 42 * scale, 17 * scale, 5 * scale)
+  rect(context, uniformLight, x - 7 * scale, groundY - 42 * scale, 4 * scale, 2 * scale)
+  rect(context, COLORS.ink, x + direction * 6 * scale, groundY - 38 * scale, direction * 7 * scale, 3 * scale)
+  rect(context, colors.cap, x + direction * 6 * scale, groundY - 37 * scale, direction * 6 * scale, scale)
+
+  const nearEyeX = x + direction * 2 * scale
+  const farEyeX = x - direction * 5 * scale
+  rect(context, COLORS.ink, nearEyeX, groundY - 32 * scale, 2 * scale, 3 * scale)
+  rect(context, COLORS.cream, nearEyeX, groundY - 32 * scale, scale, scale)
+  rect(context, COLORS.ink, farEyeX, groundY - 32 * scale, 2 * scale, 3 * scale)
+  rect(context, COLORS.cream, farEyeX, groundY - 32 * scale, scale, scale)
+  rect(context, skinShade, x + direction * scale, groundY - 29 * scale, 2 * scale, scale)
+  rect(context, COLORS.ink, x - 2 * scale, groundY - 27 * scale, 4 * scale, 2 * scale)
+  rect(context, COLORS.coral, x - scale, groundY - 27 * scale, 2 * scale, scale)
 }
 
 function zoneGeometry(mode: 'batting' | 'pitching') {
@@ -286,14 +371,14 @@ function drawScene(
   const actualPhase = state.phase === 'paused' ? state.resumePhase : state.phase
 
   if (actualPhase === 'pitching') {
-    drawPitcher(context, 91, 142, { cap: COLORS.blue, jersey: COLORS.blue }, 2, now)
-    drawBatter(context, 303, 113, { cap: COLORS.coral, jersey: COLORS.coral }, 1.5, now, true)
+    drawPitcher(context, 91, 178, { cap: COLORS.blue, jersey: COLORS.blue }, 2, now)
+    drawBatter(context, 303, 150, { cap: COLORS.coral, jersey: COLORS.coral }, 1.5, now, true)
     drawZone(context, 'pitching', pitchTarget)
     drawMeter(context, { ...state, phase: 'pitching' }, now)
     text(context, 'YOU ARE PITCHING', 12, 96, COLORS.yellow, 7)
   } else {
-    drawPitcher(context, 192, 93, { cap: COLORS.coral, jersey: COLORS.coral }, 1, now)
-    drawBatter(context, 75, 139, { cap: COLORS.blue, jersey: COLORS.blue }, 2.15, now)
+    drawPitcher(context, 192, 112, { cap: COLORS.coral, jersey: COLORS.coral }, 1, now)
+    drawBatter(context, 75, 193, { cap: COLORS.blue, jersey: COLORS.blue }, 2.15, now)
     drawZone(context, 'batting', { x: batAim.x + 1, y: batAim.y + 1 })
     text(context, 'YOU ARE BATTING', 12, 96, COLORS.yellow, 7)
   }
