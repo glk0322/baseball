@@ -13,15 +13,22 @@ import {
   applyAccuracyError,
   createGame,
   gameReducer,
-  gradeSwing,
+  gradePlayerSwing,
   isStrikeLocation,
   meterPosition,
-  pitchDuration,
+  playerPitchDuration,
   randomCpuPitch,
   resolveAiSwing,
-  resolveContact,
+  resolvePlayerContact,
   totalRuns,
 } from './game'
+import {
+  PLAYER_DATA_AS_OF,
+  PLAYER_DATA_SOURCES,
+  PLAYER_PROFILES,
+  calculateOverall,
+  findPlayer,
+} from './players'
 import type {
   ActivePitch,
   ContactGrade,
@@ -29,6 +36,7 @@ import type {
   GameState,
   GridPoint,
   HitEffect,
+  PlayerProfile,
   PitchType,
   PlayOutcome,
 } from './types'
@@ -102,16 +110,90 @@ function DifficultyPicker({
   )
 }
 
+const RATING_LABELS = {
+  contact: 'CON',
+  power: 'POW',
+  eye: 'EYE',
+  speed: 'SPD',
+  clutch: 'CLT',
+} as const
+
+function PlayerPicker({
+  selected,
+  onSelect,
+}: {
+  selected: PlayerProfile
+  onSelect: (playerId: string) => void
+}) {
+  return (
+    <fieldset className="player-picker">
+      <legend>
+        <span>2026 대표 타자 선택</span>
+        <small>{PLAYER_DATA_AS_OF} 기준 · KBO 기록 게임용 환산</small>
+      </legend>
+      <div className="player-options">
+        {PLAYER_PROFILES.map((player) => {
+          const isSelected = player.id === selected.id
+          return (
+            <button
+              type="button"
+              key={player.id}
+              className={isSelected ? 'is-selected' : ''}
+              aria-label={`${player.name} ${player.team} 선택`}
+              aria-pressed={isSelected}
+              onClick={() => onSelect(player.id)}
+            >
+              <i style={{ backgroundColor: player.accent }}>{player.teamCode}</i>
+              <strong>{player.name}</strong>
+              <small>{player.archetype}</small>
+              <b>OVR {calculateOverall(player.ratings)}</b>
+            </button>
+          )
+        })}
+      </div>
+      <div className="player-detail" aria-live="polite">
+        <div className="player-detail__identity">
+          <span style={{ backgroundColor: selected.accent }}>{selected.teamCode}</span>
+          <p>
+            <strong>{selected.name}</strong>
+            <small>{selected.team} · {selected.position} · {selected.bats}</small>
+          </p>
+        </div>
+        <dl className="player-season-stats">
+          <div><dt>AVG</dt><dd>{selected.stats.average.toFixed(3).replace(/^0/, '')}</dd></div>
+          <div><dt>OPS</dt><dd>{selected.stats.ops.toFixed(3)}</dd></div>
+          <div><dt>HR</dt><dd>{selected.stats.homeRuns}</dd></div>
+          <div><dt>SB</dt><dd>{selected.stats.stolenBases}</dd></div>
+        </dl>
+        <div className="player-ratings">
+          {(Object.keys(RATING_LABELS) as Array<keyof typeof RATING_LABELS>).map((rating) => (
+            <div key={rating}>
+              <span>{RATING_LABELS[rating]}</span>
+              <i><b style={{ width: `${selected.ratings[rating]}%` }} /></i>
+              <strong>{selected.ratings[rating]}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+      <a href={PLAYER_DATA_SOURCES[0]} target="_blank" rel="noreferrer">KBO 공식 기록 출처 ↗</a>
+    </fieldset>
+  )
+}
+
 function MenuScreen({
   difficulty,
+  player,
   muted,
   onDifficulty,
+  onPlayer,
   onStart,
   onMute,
 }: {
   difficulty: Difficulty
+  player: PlayerProfile
   muted: boolean
   onDifficulty: (difficulty: Difficulty) => void
+  onPlayer: (playerId: string) => void
   onStart: () => void
   onMute: () => void
 }) {
@@ -170,7 +252,8 @@ function MenuScreen({
             <b>VS</b>
             <span>BSN</span>
           </div>
-          <p className="preview-copy">코스를 읽고, 타이밍을 잡고, 마지막 아웃까지 승부하세요.</p>
+          <p className="preview-copy">2026 기록으로 만든 나만의 대표 타자를 선택하세요.</p>
+          <PlayerPicker selected={player} onSelect={onPlayer} />
           <DifficultyPicker selected={difficulty} onSelect={onDifficulty} />
           <button className="start-button" type="button" onClick={onStart}>
             <span>PLAY MATCH</span>
@@ -302,10 +385,12 @@ function ZonePad({
 
 function GameResultPanel({
   state,
+  player,
   onRematch,
   onMenu,
 }: {
   state: GameState
+  player: PlayerProfile
   onRematch: () => void
   onMenu: () => void
 }) {
@@ -318,6 +403,10 @@ function GameResultPanel({
         <p className="result-eyebrow">FINAL · PIXEL PARK</p>
         <h2 id="result-title">{resultCopy}</h2>
         <p>{state.result === 'win' ? '별처럼 빛난 3이닝이었습니다.' : state.result === 'loss' ? '다음 승부는 아직 남아 있습니다.' : '한 점도 양보하지 않은 팽팽한 승부!'}</p>
+        <div className="result-player">
+          <span style={{ backgroundColor: player.accent }}>{player.teamCode}</span>
+          <p><strong>{player.name}</strong><small>{player.archetype} · OVR {calculateOverall(player.ratings)}</small></p>
+        </div>
         <div className="final-score">
           <div><span>SEOUL</span><strong>{away}</strong><small>{state.stats.away.hits} H · {state.stats.away.homeRuns} HR</small></div>
           <b>—</b>
@@ -341,6 +430,7 @@ function GameResultPanel({
 
 function GameScreen({
   state,
+  player,
   muted,
   activePitch,
   batAim,
@@ -357,6 +447,7 @@ function GameScreen({
   onMenu,
 }: {
   state: GameState
+  player: PlayerProfile
   muted: boolean
   activePitch: ActivePitch | null
   batAim: GridPoint
@@ -392,6 +483,22 @@ function GameScreen({
           <BaseDiamond state={state} />
           <span>RUNNERS</span>
         </aside>
+
+        {isBatting ? (
+          <aside className="active-player-card" aria-label={`현재 타자 ${player.name}`}>
+            <span style={{ backgroundColor: player.accent }}>{player.teamCode}</span>
+            <p>
+              <small>2026 SELECTED BATTER</small>
+              <strong>{player.name}</strong>
+              <i>{player.archetype}</i>
+            </p>
+            <dl>
+              <div><dt>CON</dt><dd>{player.ratings.contact}</dd></div>
+              <div><dt>POW</dt><dd>{player.ratings.power}</dd></div>
+              <div><dt>SPD</dt><dd>{player.ratings.speed}</dd></div>
+            </dl>
+          </aside>
+        ) : null}
 
         <div className="play-call" aria-live="polite">
           <strong>{state.message}</strong>
@@ -445,14 +552,14 @@ function GameScreen({
           </div>
         ) : null}
 
-        {state.phase === 'gameOver' ? <GameResultPanel state={state} onRematch={onRematch} onMenu={onMenu} /> : null}
+        {state.phase === 'gameOver' ? <GameResultPanel state={state} player={player} onRematch={onRematch} onMenu={onMenu} /> : null}
       </section>
       <footer className="game-help">
         <span><kbd>WASD</kbd> 코스 이동</span>
         <span><kbd>SPACE</kbd> {isBatting ? '스윙' : '투구'}</span>
         <span><kbd>M</kbd> 효과음</span>
         <span><kbd>ESC</kbd> 일시정지</span>
-        <b>{DIFFICULTY_PRESETS[state.difficulty].label.toUpperCase()} MODE</b>
+        <b>{player.name} · {DIFFICULTY_PRESETS[state.difficulty].label.toUpperCase()} MODE</b>
       </footer>
     </main>
   )
@@ -473,6 +580,7 @@ function playOutcomeSound(audio: PixelAudio, outcome: PlayOutcome, grade: Contac
 
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, () => createGame('pro'))
+  const [selectedPlayerId, setSelectedPlayerId] = useState(PLAYER_PROFILES[0]!.id)
   const [muted, setMuted] = useState(false)
   const [batAim, setBatAim] = useState<GridPoint>({ x: 1, y: 1 })
   const [pitchTarget, setPitchTarget] = useState<GridPoint>({ x: 2, y: 2 })
@@ -482,10 +590,13 @@ export default function App() {
   const activePitchRef = useRef(activePitch)
   const pitchIdRef = useRef(0)
   const effectIdRef = useRef(0)
+  const selectedPlayer = useMemo(() => findPlayer(selectedPlayerId), [selectedPlayerId])
+  const selectedPlayerRef = useRef(selectedPlayer)
   const audioRef = useRef<PixelAudio | null>(null)
   audioRef.current ??= new PixelAudio()
   stateRef.current = state
   activePitchRef.current = activePitch
+  selectedPlayerRef.current = selectedPlayer
 
   useEffect(() => {
     const audio = audioRef.current
@@ -533,7 +644,11 @@ export default function App() {
         type: cpuPitch.type,
         location: cpuPitch.location,
         startTime: performance.now(),
-        duration: pitchDuration(stateRef.current.difficulty, cpuPitch.type),
+        duration: playerPitchDuration(
+          stateRef.current.difficulty,
+          cpuPitch.type,
+          selectedPlayerRef.current.ratings.eye,
+        ),
       }
       launchPitch(pitch)
       audioRef.current?.play('pitch')
@@ -580,8 +695,17 @@ export default function App() {
     audioRef.current?.play('swing')
     const timingDelta = performance.now() - pitch.startTime - pitch.duration
     const aim = { x: batAim.x + 1, y: batAim.y + 1 }
-    const grade = gradeSwing(stateRef.current.difficulty, aim, pitch.location, timingDelta)
-    const outcome = resolveContact(grade)
+    const runnersInScoringPosition = stateRef.current.bases.second || stateRef.current.bases.third
+    const ratings = selectedPlayerRef.current.ratings
+    const grade = gradePlayerSwing(
+      stateRef.current.difficulty,
+      aim,
+      pitch.location,
+      timingDelta,
+      ratings,
+      runnersInScoringPosition,
+    )
+    const outcome = resolvePlayerContact(grade, ratings, runnersInScoringPosition)
     resolvePlay(outcome, grade)
   }, [batAim, resolvePlay])
 
@@ -655,17 +779,20 @@ export default function App() {
 
   const menuProps = useMemo(() => ({
     difficulty: state.difficulty,
+    player: selectedPlayer,
     muted,
     onDifficulty: (difficulty: Difficulty) => dispatch({ type: 'chooseDifficulty', difficulty }),
+    onPlayer: setSelectedPlayerId,
     onStart: handleStart,
     onMute: handleMute,
-  }), [state.difficulty, muted, handleStart, handleMute])
+  }), [state.difficulty, selectedPlayer, muted, handleStart, handleMute])
 
   if (state.phase === 'menu') return <MenuScreen {...menuProps} />
 
   return (
     <GameScreen
       state={state}
+      player={selectedPlayer}
       muted={muted}
       activePitch={activePitch}
       batAim={batAim}

@@ -100,3 +100,46 @@ export interface HitEffect {
   outcome: PlayOutcome
   startedAt: number
 }
+
+export interface PlayerRatings {
+  contact: number
+  power: number
+  eye: number
+  speed: number
+  clutch: number
+}
+
+export interface HitterSeasonStats {
+  games: number
+  plateAppearances: number
+  atBats: number
+  hits: number
+  doubles: number
+  triples: number
+  homeRuns: number
+  runsBattedIn: number
+  walks: number
+  hitByPitch: number
+  strikeouts: number
+  stolenBases: number
+  caughtStealing: number
+  average: number
+  onBasePercentage: number
+  sluggingPercentage: number
+  ops: number
+  iso: number
+  averageWithRunnersInScoringPosition: number
+}
+
+export interface PlayerProfile {
+  id: string
+  name: string
+  team: string
+  teamCode: string
+  position: string
+  bats: '좌타' | '우타' | '양타'
+  archetype: string
+  accent: string
+  ratings: PlayerRatings
+  stats: HitterSeasonStats
+}

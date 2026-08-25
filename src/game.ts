@@ -6,6 +6,7 @@ import type {
   GameResult,
   GameState,
   GridPoint,
+  PlayerRatings,
   PlayOutcome,
 } from './types'
 
@@ -107,6 +108,15 @@ export function pitchDuration(
   return base * 1.05
 }
 
+export function playerPitchDuration(
+  difficulty: Difficulty,
+  pitchType: GameState['selectedPitch'],
+  eye: number,
+): number {
+  const readingBoost = Math.max(0.96, Math.min(1.06, 1 + (eye - 84) * 0.003))
+  return pitchDuration(difficulty, pitchType) * readingBoost
+}
+
 export function meterPosition(time: number, period: number): number {
   const progress = (time % period) / period
   return progress <= 0.5 ? progress * 2 : (1 - progress) * 2
@@ -131,11 +141,38 @@ export function gradeSwing(
   return 'miss'
 }
 
+export function gradePlayerSwing(
+  difficulty: Difficulty,
+  aim: GridPoint,
+  pitchLocation: GridPoint,
+  timingDelta: number,
+  ratings: PlayerRatings,
+  runnersInScoringPosition = false,
+): ContactGrade {
+  const preset = DIFFICULTY_PRESETS[difficulty]
+  const distance = Math.max(
+    Math.abs(aim.x - pitchLocation.x),
+    Math.abs(aim.y - pitchLocation.y),
+  )
+  const clutchBoost = runnersInScoringPosition ? (ratings.clutch - 80) * 0.002 : 0
+  const windowScale = Math.max(
+    0.9,
+    Math.min(1.24, 1 + (ratings.contact - 84) * 0.008 + (ratings.eye - 84) * 0.003 + clutchBoost),
+  )
+  const timing = Math.abs(timingDelta)
+
+  if (distance === 0 && timing <= preset.perfectWindow * windowScale) return 'perfect'
+  if (distance <= 1 && timing <= preset.contactWindow * windowScale) return 'good'
+  if (distance <= 1 && timing <= preset.contactWindow * 1.45 * windowScale) return 'weak'
+  return 'miss'
+}
+
 function weightedOutcome(
   entries: Array<[PlayOutcome, number]>,
   rng: () => number,
 ): PlayOutcome {
-  const roll = Math.max(0, Math.min(0.999999, rng()))
+  const total = entries.reduce((sum, [, weight]) => sum + weight, 0)
+  const roll = Math.max(0, Math.min(0.999999, rng())) * total
   let cursor = 0
 
   for (const [outcome, weight] of entries) {
@@ -183,6 +220,59 @@ export function resolveContact(
     ],
     rng,
   )
+}
+
+export function resolvePlayerContact(
+  grade: ContactGrade,
+  ratings: PlayerRatings,
+  runnersInScoringPosition = false,
+  rng: () => number = Math.random,
+): PlayOutcome {
+  if (grade === 'miss') return 'swingingStrike'
+
+  const contact = (ratings.contact - 84) / 100
+  const power = (ratings.power - 84) / 100
+  const eye = (ratings.eye - 84) / 100
+  const clutch = runnersInScoringPosition ? Math.max(0, ratings.clutch - 80) / 250 : 0
+  let outcome: PlayOutcome
+
+  if (grade === 'perfect') {
+    outcome = weightedOutcome(
+      [
+        ['out', Math.max(0.025, 0.1 - contact * 0.42 - clutch * 0.35)],
+        ['single', Math.max(0.12, 0.3 + contact * 0.36 - power * 0.18)],
+        ['double', Math.max(0.08, 0.22 + power * 0.3)],
+        ['triple', 0.08],
+        ['homeRun', Math.max(0.12, 0.3 + power * 0.48 + clutch * 0.24)],
+      ],
+      rng,
+    )
+  } else if (grade === 'good') {
+    outcome = weightedOutcome(
+      [
+        ['out', Math.max(0.22, 0.45 - contact * 0.75 - clutch * 0.45)],
+        ['single', Math.max(0.22, 0.37 + contact * 0.52 - power * 0.12)],
+        ['double', Math.max(0.06, 0.13 + power * 0.3)],
+        ['triple', 0.02],
+        ['homeRun', Math.max(0.01, 0.03 + power * 0.34 + clutch * 0.12)],
+      ],
+      rng,
+    )
+  } else {
+    outcome = weightedOutcome(
+      [
+        ['foul', Math.max(0.38, 0.55 + eye * 0.36)],
+        ['out', Math.max(0.2, 0.35 - contact * 0.45 - clutch * 0.18)],
+        ['single', Math.max(0.05, 0.1 + contact * 0.24)],
+      ],
+      rng,
+    )
+  }
+
+  const stretchChance = Math.max(0, ratings.speed - 80) / 125
+  if (outcome === 'single' && rng() < stretchChance) return 'double'
+  if (outcome === 'double' && ratings.speed > 90 && rng() < stretchChance * 0.65) return 'triple'
+  return outcome
 }
 
 export function resolveAiSwing(
