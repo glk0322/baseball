@@ -5,3 +5,5 @@ dist/
 .vite/
 coverage/
 npm-debug.log*
+.vercel
+.env*
